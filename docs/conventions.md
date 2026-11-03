@@ -32,3 +32,12 @@ joined and never counted twice.
 - A value copied straight from MLB keeps the ending `_raw`: `pitch_type_raw`.
 - If we do not know a value, it is empty (null). Never 0, never "" , never False.
 - Every table has `season` and `source_file` so any number can be traced back.
+
+
+## Known season differences (verified on real feeds, 2 Nov 2026)
+
+- 2021: `sz_top_ft` / `sz_bot_ft` change pitch to pitch for the same batter
+  (set from the stance). 2026: one fixed value per batter (ABS, from height).
+  Accuracy across seasons must use one common zone, not these columns as-is.
+- Game status can be "Completed Early" (shortened game), not only "Final".
+  Decide before the full build which statuses count.
