@@ -8,7 +8,7 @@
    table per season, with a matching CSV copy beside it. These tables are
    used for research.
 3. **Analysis** — notebooks contain joins, filters, and results. They are
-   built from the tables; nothing in a notebook is saved as “the data.”
+   built from the tables; nothing in a notebook is saved as "the data."
 
 ## Tables and their keys
 
@@ -25,53 +25,40 @@ A key identifies each row so rows can be joined and not counted twice.
 
 Before saving, each table must check that its key is unique.
 
-<<<<<<< HEAD
-- Column names are lower case with underscores: `plate_umpire_id`.
-- Id columns end in `_id`. True/false columns start with `is_`.
-- Units go in the name: `plate_z_ft`, `release_speed_mph`, `distance_in`.
-- A value copied straight from MLB keeps the ending `_raw`: `pitch_type_raw`.
-- If we do not know a value, it is empty (null). Never 0, never "" , never False.
-- Every table has `season` and `source_file` so any number can be traced back.
+## Naming and values
 
+- Use lowercase names with underscores, such as `plate_umpire_id`.
+- ID columns end in `_id`. True/false columns start with `is_`.
+- Include units in measurement names: `plate_z_ft`, `release_speed_mph`,
+  `distance_in`.
+- Values copied verbatim from the API end in `_raw`: `pitch_type_raw`.
+- Unknown values are null. Never `0`, an empty string, or `False` for an
+  unknown value.
+- Every table includes `season` and `source_file` so rows can be traced
+  to their source.
+- Use integer types for IDs, nullable `Int64` when an ID may be missing,
+  booleans for true/false values, and strings for text.
 
-## Known season differences (verified on real feeds, 2 Nov 2026)
-
-- 2021: `sz_top_ft` / `sz_bot_ft` change pitch to pitch for the same batter
-  (set from the stance). 2026: one fixed value per batter (ABS, from height).
-  Accuracy across seasons must use one common zone, not these columns as-is.
-- Game status can be "Completed Early" (shortened game), not only "Final".
-  Decide before the full build which statuses count.
-=======
 ## Season table files
 
-Save each table under:
-
-`data/tables/<table>/season=<year>/`
-
-Each season folder contains `part.parquet` and a matching `part.csv`.
-Write CSV files with `index=False`. The `data/` and `reports/` folders are
-excluded from Git; do not commit them.
+Save each table under `data/tables/<table>/season=<year>/`. Each season
+folder contains `part.parquet` and a matching `part.csv`, written with
+`index=False`. The `data/` and `reports/` folders are excluded from Git;
+do not commit them.
 
 ## Repeated schedule entries
 
 MLB may return a game under both its original schedule date and its
-rescheduled date with the same `gamePk`. In the games and umpire assignment
-tables, keep the occurrence whose schedule date matches the game's
-`officialDate`. Report the status counts before resolving repeats so
-postponed occurrences remain visible in the run summary.
+rescheduled date with the same `gamePk`. In the games and umpire
+assignment tables, keep the occurrence whose schedule date matches the
+game's `officialDate`. Report the status counts before resolving repeats
+so postponed occurrences remain visible in the run summary.
 
-## Naming and values
+## Known season differences (verified on real feeds, 2 Nov 2026)
 
-- Use lowercase names with underscores, such as `plate_umpire_id`.
-- ID columns end in `_id`.
-- True/false columns start with `is_`.
-- Include units in measurement names, such as `plate_z_ft`,
-  `release_speed_mph`, or `distance_in`.
-- Values copied verbatim from the API end in `_raw`.
-- Unknown values are null. Do not use `0`, an empty string, or `False` to
-  represent an unknown value.
-- Every table includes `season` and `source_file` so rows can be traced to
-  their source.
-- Use integer types for IDs, nullable `Int64` when an ID may be missing,
-  booleans for true/false values, and strings for text.
->>>>>>> origin/step-1b-season-schedule
+- 2021: `sz_top_ft` / `sz_bot_ft` change pitch to pitch for the same
+  batter (set from the stance). 2026: one fixed value per batter (ABS,
+  from height). Accuracy across seasons must use one common zone, not
+  these columns as-is.
+- Game status can be "Completed Early" (shortened game), not only
+  "Final". Decide before the full build which statuses count.
