@@ -18,6 +18,7 @@ RAW_DIR = PROJECT_DIR / "data" / "raw" / "feed_live"
 TABLES_DIR = PROJECT_DIR / "data" / "tables"
 
 CALLED_CODES = ("B", "C")  # B = ball, C = called strike
+ABS_REVIEW_TYPE = "MJ"
 PITCH_KEY = ["game_pk", "at_bat_index", "pitch_number"]
 NULLABLE_INT_COLUMNS = [
     "event_index",
@@ -43,18 +44,20 @@ def load_feed(game_pk: int) -> dict:
 
 
 def review_for(play: dict, event: dict, is_last_pitch: bool) -> dict | None:
-    """Return the challenge record for a pitch, or None.
+    """Return the ABS challenge record for a pitch, or None.
 
     Rule 1: a challenge is stored on the pitch event, except when it
     ended the plate appearance; then it is stored on the play and
     belongs to that play's last pitch.
+    Rule 3: reviewDetails covers every replay review (tag plays, home
+    runs, ...). Only reviewType "MJ" is an ABS ball/strike challenge.
     """
-    if event.get("reviewDetails"):
-        return event["reviewDetails"]
-    if is_last_pitch and play.get("reviewDetails"):
-        return play["reviewDetails"]
-    return None
-
+    review = event.get("reviewDetails")
+    if review is None and is_last_pitch:
+        review = play.get("reviewDetails")
+    if review is None or review.get("reviewType") != ABS_REVIEW_TYPE:
+        return None
+    return review
 
 def original_call(final_code: str, review: dict | None) -> str | None:
     """Return the umpire's original call code, or None if unknowable.
