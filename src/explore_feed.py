@@ -42,8 +42,12 @@ def main() -> None:
     section("Game")
     print("game_pk:", game_pk)
     print("date:   ", game["datetime"]["officialDate"])
-    print("home:   ", game["teams"]["home"]["name"], game["teams"]["home"]["id"])
-    print("away:   ", game["teams"]["away"]["name"], game["teams"]["away"]["id"])
+    print(
+        "home:   ", game["teams"]["home"]["name"], game["teams"]["home"]["id"]
+    )
+    print(
+        "away:   ", game["teams"]["away"]["name"], game["teams"]["away"]["id"]
+    )
     print("plays:  ", len(plays))
 
     section("Pitch events")
@@ -56,24 +60,36 @@ def main() -> None:
     for play in plays:
         for event in play["playEvents"]:
             if event["isPitch"] and event.get("reviewDetails"):
-                print(describe_review(event["reviewDetails"],
-                                      play["about"]["atBatIndex"],
-                                      event, "pitch event"))
+                print(
+                    describe_review(
+                        event["reviewDetails"],
+                        play["about"]["atBatIndex"],
+                        event,
+                        "pitch event",
+                    )
+                )
 
     section("Challenges on plays (last pitch of the PA)")
     for play in plays:
         if play.get("reviewDetails"):
             last_pitch = [e for e in play["playEvents"] if e["isPitch"]][-1]
-            print(describe_review(play["reviewDetails"],
-                                  play["about"]["atBatIndex"],
-                                  last_pitch, "play level"))
+            print(
+                describe_review(
+                    play["reviewDetails"],
+                    play["about"]["atBatIndex"],
+                    last_pitch,
+                    "play level",
+                )
+            )
 
     section("ABS counters (end of game)")
     counters = game.get("absChallenges", {})
     for side in ("home", "away"):
         c = counters.get(side, {})
-        print(f"{side}: won {c.get('usedSuccessful')}  "
-              f"lost {c.get('usedFailed')}  remaining {c.get('remaining')}")
+        print(
+            f"{side}: won {c.get('usedSuccessful')}  "
+            f"lost {c.get('usedFailed')}  remaining {c.get('remaining')}"
+        )
 
 
 if __name__ == "__main__":

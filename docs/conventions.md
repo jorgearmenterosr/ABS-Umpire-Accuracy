@@ -62,9 +62,12 @@ so postponed occurrences remain visible in the run summary.
   these columns as-is.
 - Game status can be "Completed Early" (shortened game), not only
   "Final". Decide before the full build which statuses count.
-  - `gameData.absChallenges.<side>.remaining` does not include the
+- `gameData.absChallenges.<side>.remaining` does not include the
   extra-inning grant (a team at 0 entering the 10th gets 1). Check
   `usedSuccessful` / `usedFailed` against our counts instead.
 - `reviewDetails` records every replay review (tag plays, home runs,
   hit-by-pitch, ...). Only `reviewType == "MJ"` is an ABS ball/strike
   challenge; only those carry `player`.
+- Game 822717 (2026-06-25, PHI@WSH): counters say WSH won 1 / lost 1,
+  but the feed records only one WSH challenge (upheld). One known
+  counter mismatch; left as-is and flagged.

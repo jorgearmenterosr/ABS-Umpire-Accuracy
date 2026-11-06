@@ -59,6 +59,7 @@ def review_for(play: dict, event: dict, is_last_pitch: bool) -> dict | None:
         return None
     return review
 
+
 def original_call(final_code: str, review: dict | None) -> str | None:
     """Return the umpire's original call code, or None if unknowable.
 
@@ -81,7 +82,9 @@ def original_call(final_code: str, review: dict | None) -> str | None:
 # ------------------------------------------------------------- one row
 
 
-def pitch_row(game: dict, play: dict, event: dict, review: dict | None) -> dict:
+def pitch_row(
+    game: dict, play: dict, event: dict, review: dict | None
+) -> dict:
     """Return one flat row for one pitch event."""
     about = play["about"]
     matchup = play["matchup"]
@@ -147,8 +150,12 @@ def pitch_row(game: dict, play: dict, event: dict, review: dict | None) -> dict:
         "outs_after": count.get("outs"),
         # the challenge
         "is_challenged": review is not None,
-        "is_overturned": None if review is None else review.get("isOverturned"),
-        "challenge_team_id": None if review is None else review.get("challengeTeamId"),
+        "is_overturned": None
+        if review is None
+        else review.get("isOverturned"),
+        "challenge_team_id": None
+        if review is None
+        else review.get("challengeTeamId"),
         "challenger_id": None if review is None else review["player"]["id"],
         # timing
         "start_time": event.get("startTime"),
@@ -206,7 +213,10 @@ def main() -> None:
     print("=== summary ===")
     print("saved:          ", path)
     print("rows x columns: ", table.shape)
-    print("called (B/C):   ", int(table["call_code_raw"].isin(CALLED_CODES).sum()))
+    print(
+        "called (B/C):   ",
+        int(table["call_code_raw"].isin(CALLED_CODES).sum()),
+    )
     print("challenged:     ", int(table["is_challenged"].sum()))
     print("overturned:     ", int((table["is_overturned"] == True).sum()))  # noqa: E712
     print("missing plate_x:", int(table["plate_x_ft"].isna().sum()))

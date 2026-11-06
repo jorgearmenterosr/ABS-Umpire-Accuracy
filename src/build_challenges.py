@@ -44,21 +44,21 @@ def challenger_role(review: dict, matchup: dict) -> str:
 
 
 def challenge_row(
-    game: dict, play: dict, event: dict, review: dict, where: str
+    game: dict, play: dict, event: dict, review: dict, where: str, seq: int
 ) -> dict:
     """Return one flat row for one challenge."""
     about = play["about"]
     game_pk = game["game"]["pk"]
     final_code = event["details"]["call"]["code"]
     return {
-        "challenge_id": f"{game_pk}-{about['atBatIndex']}-{event['pitchNumber']}",
+        "challenge_id": f"{game_pk}-{about['atBatIndex']}-{event['pitchNumber']}-{seq}",
         "game_pk": game_pk,
         "season": int(game["game"]["season"]),
         "at_bat_index": about["atBatIndex"],
         "pitch_number": event["pitchNumber"],
         "inning": about["inning"],
         "half_inning": about["halfInning"],
-        "record_location": where,
+        "review_seq": seq,
         "challenge_team_id": review.get("challengeTeamId"),
         "challenger_id": review["player"]["id"],
         "challenger_name": review["player"].get("fullName"),
@@ -83,7 +83,12 @@ def challenges_table(feed: dict) -> pd.DataFrame:
             if review is None:
                 continue
             where = "pitch" if event.get("reviewDetails") else "play"
-            rows.append(challenge_row(game, play, event, review, where))
+            reviews = [review] + [
+                r for r in review.get("additionalReviews", [])
+                if r.get("reviewType") == "MJ"
+            ]
+            for seq, r in enumerate(reviews, start=1):
+                rows.append(challenge_row(game, play, event, r, where, seq))
     return pd.DataFrame(rows)
 
 
@@ -113,9 +118,20 @@ def remaining_before_each_pitch(feed: dict) -> pd.DataFrame:
                 }
             )
             review = review_for(play, event, event is pitches[-1])
-            if review is not None and review.get("isOverturned") is False:
-                side = "home" if review["challengeTeamId"] == home_id else "away"
-                left[side] -= 1
+            if review is not None:
+                reviews = [review] + [
+                    r
+                    for r in review.get("additionalReviews", [])
+                    if r.get("reviewType") == "MJ"
+                ]
+                for r in reviews:
+                    if r.get("isOverturned") is False:
+                        side = (
+                            "home"
+                            if r["challengeTeamId"] == home_id
+                            else "away"
+                        )
+                        left[side] -= 1
     return pd.DataFrame(rows)
 
 
@@ -140,13 +156,16 @@ def check_counters(
         won = int((ours["is_overturned"] == True).sum())  # noqa: E712
         lost = int((ours["is_overturned"] == False).sum())  # noqa: E712
         theirs = counters.get(side, {})
-        match = (won == theirs.get("usedSuccessful")
-                 and lost == theirs.get("usedFailed"))
+        match = won == theirs.get("usedSuccessful") and lost == theirs.get(
+            "usedFailed"
+        )
         ok = ok and match
         if not quiet:
-            print(f"{side}: feed won/lost {theirs.get('usedSuccessful')}/"
-                  f"{theirs.get('usedFailed')}, ours {won}/{lost}"
-                  f"  {'OK' if match else 'MISMATCH'}")
+            print(
+                f"{side}: feed won/lost {theirs.get('usedSuccessful')}/"
+                f"{theirs.get('usedFailed')}, ours {won}/{lost}"
+                f"  {'OK' if match else 'MISMATCH'}"
+            )
     return ok
 
 
@@ -173,7 +192,9 @@ def main() -> None:
         game_challenges = challenges_table(feed)
         challenge_frames.append(game_challenges)
         remaining_frames.append(remaining_before_each_pitch(feed))
-        has_abs = feed["gameData"].get("absChallenges", {}).get("hasChallenges")
+        has_abs = (
+            feed["gameData"].get("absChallenges", {}).get("hasChallenges")
+        )
         if has_abs and not check_counters(feed, game_challenges, quiet=True):
             mismatches.append(int(path.stem))
         if i % PROGRESS_EVERY == 0:
@@ -183,12 +204,18 @@ def main() -> None:
     remaining = pd.concat(remaining_frames, ignore_index=True)
     if len(challenges):
         assert challenges["challenge_id"].is_unique, "duplicate challenge_id"
-        challenges["is_overturned"] = challenges["is_overturned"].astype("boolean")
+        challenges["is_overturned"] = challenges["is_overturned"].astype(
+            "boolean"
+        )
 
     print("saved", save_table(challenges, "challenges", season))
     print("saved", save_table(remaining, "challenges_remaining", season))
-    print("challenges:", len(challenges),
-          " overturned:", int(challenges["is_overturned"].sum()))
+    print(
+        "challenges:",
+        len(challenges),
+        " overturned:",
+        int(challenges["is_overturned"].sum()),
+    )
     print("games with counter mismatch:", len(mismatches), mismatches[:20])
 
 

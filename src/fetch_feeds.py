@@ -76,5 +76,6 @@ def main() -> None:
     if failed:
         print("failed game_pks:", failed)
 
+
 if __name__ == "__main__":
     main()
