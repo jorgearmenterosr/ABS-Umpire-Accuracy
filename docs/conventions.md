@@ -22,6 +22,7 @@ A key identifies each row so rows can be joined and not counted twice.
 | challenges | ABS challenge | challenge_id |
 | players | player | player_id |
 | umpires | umpire | official_id |
+| crews | game and assigned umpire | game_pk, official_id |
 
 Before saving, each table must check that its key is unique.
 
@@ -71,3 +72,23 @@ so postponed occurrences remain visible in the run summary.
 - Game 822717 (2026-06-25, PHI@WSH): counters say WSH won 1 / lost 1,
   but the feed records only one WSH challenge (upheld). One known
   counter mismatch; left as-is and flagged.
+
+## Crews and umpire rotations
+
+The `crews` table has one row per worked game and assigned umpire. A
+`crew_id` represents the same set of officials within a season, regardless
+of their positions. The `official_type` column records each umpire's
+position in that game.
+
+`previous_game_pk` and `previous_official_type` identify the umpire's
+previous worked game and position. `is_position_change` is null when the
+umpire has no previous game in that season.
+
+The pipeline counts `Final` and `Completed Early` games as worked.
+Postponed and cancelled games are excluded. Crews with fewer than four
+listed umpires are retained and marked with `is_complete_crew = False`.
+For example, game 632512 in 2021 had three listed umpires and no
+Second Base umpire.
+
+The season summary CSV and plate-game histogram are saved under
+`reports/`. The reports folder is git-ignored.
