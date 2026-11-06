@@ -8,8 +8,8 @@ Usage:  python src/fetch_feeds.py 2026
 """
 
 import json
-import time
 import sys
+import time
 from pathlib import Path
 
 import pandas as pd
@@ -42,7 +42,7 @@ def download(game_pk: int) -> str:
     for attempt in range(1, MAX_ATTEMPTS + 1):
         try:
             feed = fetch_feed(game_pk)
-        except Exception as error:  # network or HTTP error
+        except Exception as error:  # noqa: BLE001  (network or HTTP error)
             print(f"  {game_pk}: attempt {attempt} failed ({error})")
             time.sleep(PAUSE_SECONDS * 2**attempt)
             continue

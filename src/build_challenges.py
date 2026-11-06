@@ -111,8 +111,8 @@ def remaining_before_each_pitch(feed: dict) -> pd.DataFrame:
         inning = play["about"]["inning"]
         if inning >= EXTRA_INNING_START and inning not in granted_innings:
             granted_innings.add(inning)
-            for side in left:
-                if left[side] == 0:
+            for side, count in left.items():
+                if count == 0:
                     left[side] = 1
         pitches = [e for e in play["playEvents"] if e["isPitch"]]
         for event in pitches:
@@ -155,14 +155,13 @@ def check_counters(
     `usedSuccessful` and `usedFailed` instead.
     """
     game = feed["gameData"]
-    home_id = game["teams"]["home"]["id"]
     counters = game.get("absChallenges", {})
     ok = True
     for side in ("home", "away"):
         team_id = game["teams"][side]["id"]
         ours = challenges[challenges["challenge_team_id"] == team_id]
-        won = int((ours["is_overturned"] == True).sum())  # noqa: E712
-        lost = int((ours["is_overturned"] == False).sum())  # noqa: E712
+        won = int((ours["is_overturned"] == True).sum())
+        lost = int((ours["is_overturned"] == False).sum())
         theirs = counters.get(side, {})
         match = won == theirs.get("usedSuccessful") and lost == theirs.get(
             "usedFailed"
