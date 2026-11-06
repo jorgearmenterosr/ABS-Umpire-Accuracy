@@ -92,3 +92,10 @@ Second Base umpire.
 
 The season summary CSV and plate-game histogram are saved under
 `reports/`. The reports folder is git-ignored.
+
+## Placeholder officials in schedule responses
+
+When the schedule response lists an official with the full name `NO UMPIRE`,
+the raw JSON remains unchanged, but that placeholder is omitted from
+`umpire_assignments`. The position is treated as unassigned and appears as
+an incomplete crew in the crews table.

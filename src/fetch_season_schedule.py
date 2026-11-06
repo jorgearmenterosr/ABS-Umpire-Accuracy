@@ -14,6 +14,7 @@ from fetch_schedule import fetch_schedule, save_raw, save_table
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 RAW_DIR = PROJECT_DIR / "data" / "raw" / "schedule"
 REQUEST_PAUSE_SECONDS = 0.5
+NO_UMPIRE_NAME = "NO UMPIRE"
 
 # Season dates are based on MLB's regular-season schedule announcements.
 # 2021: https://www.mlb.com/press-release/press-release-mlb-announces-2021-regular-season-schedule
@@ -98,8 +99,12 @@ def extract_rows(
             officials = game.get("officials") or []
             plate_umpire = {}
             for entry in officials:
-                if entry.get("officialType") == "Home Plate":
-                    plate_umpire = entry.get("official") or {}
+                official = entry.get("official") or {}
+                if (
+                    entry.get("officialType") == "Home Plate"
+                    and official.get("fullName") != NO_UMPIRE_NAME
+                ):
+                    plate_umpire = official
                     break
 
             doubleheader = game.get("doubleHeader")
@@ -137,6 +142,9 @@ def extract_rows(
 
             for entry in officials:
                 official = entry.get("official") or {}
+                if official.get("fullName") == NO_UMPIRE_NAME:
+                    continue
+
                 assignments.append(
                     {
                         "game_pk": game["gamePk"],
