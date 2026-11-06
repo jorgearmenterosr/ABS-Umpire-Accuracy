@@ -28,7 +28,11 @@ NULLABLE_INT_COLUMNS = [
     "outs_after",
     "challenge_team_id",
     "challenger_id",
+    "spin_rate_rpm",
+    "spin_direction_deg",
 ]
+KEEP_STATUSES = ("Final", "Completed Early")
+PROGRESS_EVERY = 200
 
 
 # ---------------------------------------------------------------- loading
@@ -181,7 +185,7 @@ def pitches_table(feed: dict) -> pd.DataFrame:
 def set_types(table: pd.DataFrame) -> pd.DataFrame:
     """Give columns that can be empty a type that keeps null as null."""
     for col in NULLABLE_INT_COLUMNS:
-        table[col] = table[col].astype("Int64")
+        table[col] = pd.to_numeric(table[col], errors="coerce").astype("Int64")
     table["is_overturned"] = table["is_overturned"].astype("boolean")
     return table
 
@@ -199,27 +203,41 @@ def save_table(table: pd.DataFrame, name: str, season: int) -> Path:
     return path
 
 
+def feeds_for(season: int) -> list[Path]:
+    """Return the saved feed files for the finished games of a season."""
+    games_path = TABLES_DIR / "games" / f"season={season}" / "part.parquet"
+    games = pd.read_parquet(games_path)
+    finished = games[games["status"].isin(KEEP_STATUSES)]
+    paths = [RAW_DIR / f"{pk}.json" for pk in finished["game_pk"].astype(int)]
+    return [p for p in paths if p.exists()]
+
+
 # ---------------------------------------------------------------- main
 
-
 def main() -> None:
-    game_pk = int(sys.argv[1]) if len(sys.argv) > 1 else 822970
-    table = set_types(pitches_table(load_feed(game_pk)))
-    assert not table.duplicated(PITCH_KEY).any(), "duplicate pitch key"
+    season = int(sys.argv[1]) if len(sys.argv) > 1 else 2026
+    paths = feeds_for(season)
+    print(f"season {season}: {len(paths)} feeds on disk")
 
-    season = int(table["season"].iloc[0])
+    frames = []
+    for i, path in enumerate(paths, start=1):
+        frames.append(pitches_table(load_feed(int(path.stem))))
+        if i % PROGRESS_EVERY == 0:
+            print(f"  {i}/{len(paths)}")
+
+    table = set_types(pd.concat(frames, ignore_index=True))
+    assert not table.duplicated(PITCH_KEY).any(), "duplicate pitch key"
     path = save_table(table, "pitches", season)
 
+    called = table["call_code_raw"].isin(CALLED_CODES)
     print("=== summary ===")
     print("saved:          ", path)
+    print("games:          ", table["game_pk"].nunique())
     print("rows x columns: ", table.shape)
-    print(
-        "called (B/C):   ",
-        int(table["call_code_raw"].isin(CALLED_CODES).sum()),
-    )
+    print("called (B/C):   ", int(called.sum()))
     print("challenged:     ", int(table["is_challenged"].sum()))
-    print("overturned:     ", int((table["is_overturned"] == True).sum()))  # noqa: E712
     print("missing plate_x:", int(table["plate_x_ft"].isna().sum()))
+    print("missing sz_top: ", int(table["sz_top_ft"].isna().sum()))
 
 
 if __name__ == "__main__":
