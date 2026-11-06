@@ -29,6 +29,14 @@ STARTING_CHALLENGES = 2
 EXTRA_INNING_START = 10
 PROGRESS_EVERY = 200
 
+CHALLENGE_COLUMNS = [
+    "challenge_id", "game_pk", "season", "at_bat_index", "pitch_number",
+    "inning", "half_inning", "record_location", "review_seq",
+    "challenge_team_id", "challenger_id", "challenger_name",
+    "challenger_role", "final_call_code", "original_call_code",
+    "is_overturned",
+]
+
 
 # -------------------------------------------------------------- one row
 
@@ -204,18 +212,16 @@ def main() -> None:
     remaining = pd.concat(remaining_frames, ignore_index=True)
     if len(challenges):
         assert challenges["challenge_id"].is_unique, "duplicate challenge_id"
-        challenges["is_overturned"] = challenges["is_overturned"].astype(
-            "boolean"
-        )
+        challenges["is_overturned"] = challenges["is_overturned"].astype("boolean")
+        overturned = int(challenges["is_overturned"].sum())
+    else:
+        challenges = pd.DataFrame(columns=CHALLENGE_COLUMNS)
+        overturned = 0
 
     print("saved", save_table(challenges, "challenges", season))
     print("saved", save_table(remaining, "challenges_remaining", season))
-    print(
-        "challenges:",
-        len(challenges),
-        " overturned:",
-        int(challenges["is_overturned"].sum()),
-    )
+    print("challenges:", len(challenges), " overturned:", overturned)
+
     print("games with counter mismatch:", len(mismatches), mismatches[:20])
 
 
