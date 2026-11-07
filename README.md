@@ -57,7 +57,7 @@ Mac so it does not sleep mid-download.
 ## Scripts
 
 | Script | What it does| 
-| --- | --- | --- |
+| --- | --- |
 | `fetch_schedule.py` | one day of the schedule with umpires (building block)|
 | `fetch_season_schedule.py` | whole season → `games`, `umpire_assignments`|
 | `fetch_feed.py` | one game's live feed (building block)|
@@ -71,15 +71,6 @@ Mac so it does not sleep mid-download.
 | `enrich_challenges.py` | challenges joined to games and teams|
 | `explore_feed.py` | scratch: readable report of one feed|
 
-## Working together
-
-- One branch per step (`step-2-pitches`), pull request, reviewed by
-  the other person before merging. `main` always runs.
-- `ruff check src` and `ruff format --line-length 79 src` before
-  every commit.
-- Never commit `data/` or `reports/` (git-ignored).
-- Unknown values are empty, never 0 or "". Every rule we rely on is
-  written in `docs/conventions.md` before code depends on it.
 
 ## Documents
 
