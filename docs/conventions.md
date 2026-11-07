@@ -99,3 +99,15 @@ When the schedule response lists an official with the full name `NO UMPIRE`,
 the raw JSON remains unchanged, but that placeholder is omitted from
 `umpire_assignments`. The position is treated as unassigned and appears as
 an incomplete crew in the crews table.
+
+## Global umpires table
+
+The `umpires` table has one row per `official_id` across all included seasons.
+It is stored at `data/tables/umpires/part.parquet` and `part.csv`, without a
+season partition or a single `season` column. The `seasons_active` column lists
+the seasons in which each umpire worked. Each row's `source_file` lists the
+assignment table files for those seasons and the Retrosheet biofile.
+
+Retrosheet matches use exact normalized names from `fullname` or
+`usename` plus `lastname`. Names without a unique match remain unmatched and
+are listed in `reports/umpire_match_issues.csv`; they are not guessed.
