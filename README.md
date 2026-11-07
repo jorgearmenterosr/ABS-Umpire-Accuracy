@@ -56,20 +56,20 @@ Mac so it does not sleep mid-download.
 
 ## Scripts
 
-| Script | What it does | Owner |
+| Script | What it does 
 | --- | --- | --- |
-| `fetch_schedule.py` | one day of the schedule with umpires (building block) | Owen |
-| `fetch_season_schedule.py` | whole season → `games`, `umpire_assignments` | Jorge |
-| `fetch_feed.py` | one game's live feed (building block) | Owen |
-| `fetch_feeds.py` | every finished game's feed for a season, resumable | Owen |
-| `build_pitches.py` | feeds → `pitches`, with the umpire's original call reconstructed | Owen |
-| `build_challenges.py` | feeds → `challenges`, `challenges_remaining`, checked against MLB's counters | Owen |
-| `build_crews.py` | assignments → `crews`, plate-games histogram | Jorge |
-| `build_umpires.py` | `umpires` with Retrosheet birth and debut dates | Jorge |
-| `build_teams.py` | `teams` lookup | Owen |
-| `combine_seasons.py` | per-season files → one file per table | Owen |
-| `enrich_challenges.py` | challenges joined to games and teams | Owen |
-| `explore_feed.py` | scratch: readable report of one feed | Owen |
+| `fetch_schedule.py` | one day of the schedule with umpires (building block) 
+| `fetch_season_schedule.py` | whole season → `games`, `umpire_assignments` 
+| `fetch_feed.py` | one game's live feed (building block) 
+| `fetch_feeds.py` | every finished game's feed for a season, resumable 
+| `build_pitches.py` | feeds → `pitches`, with the umpire's original call reconstructed 
+| `build_challenges.py` | feeds → `challenges`, `challenges_remaining`, checked against MLB's counters 
+| `build_crews.py` | assignments → `crews`, plate-games histogram 
+| `build_umpires.py` | `umpires` with Retrosheet birth and debut dates 
+| `build_teams.py` | `teams` lookup 
+| `combine_seasons.py` | per-season files → one file per table 
+| `enrich_challenges.py` | challenges joined to games and teams 
+| `explore_feed.py` | scratch: readable report of one feed
 
 ## Working together
 
