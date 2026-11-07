@@ -19,6 +19,8 @@ definitions: https://github.com/jorgearmenterosr/ABS-Umpire-Accuracy
 | umpires | umpire | official_id | name, seasons active, Retrosheet birth date and MLB debut where matched |
 | pitches | pitch | game_pk, at_bat_index, pitch_number | 52 columns: call, pitch type, location at front of plate (ft), batter zone (ft), movement (in), spin, nine trajectory parameters, count, challenge flags, umpire's original call |
 | challenges | ABS challenge | challenge_id | 2026 only (empty files for 2021–2025): team, player, role (batter/catcher/pitcher), original and final call, overturned |
+| teams | club | team_id | 30 MLB clubs: name, abbreviation, league, division |
+| challenges_enriched | ABS challenge | challenge_id | challenges joined to games and teams: date, home/away side, opponent, team abbreviations, plate umpire |
 | challenges_remaining | pitch | game_pk, at_bat_index, pitch_number | challenges each team had left before the pitch (2 to start; −1 on a failed challenge; +1 entering an extra inning with 0) |
 
 Column conventions: snake_case; `_id` = MLB id; `is_` = true/false;
