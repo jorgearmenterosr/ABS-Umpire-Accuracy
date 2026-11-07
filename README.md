@@ -37,8 +37,8 @@ Tables: `games`, `umpire_assignments`, `crews`, `umpires`, `pitches`
 Run in this order, once per season (2021–2026). A season takes about
 45 minutes, almost all of it the feed download.
 
-    python src/fetch_season_schedule.py 2026   # games + umpire crews (2 min)
-    python src/fetch_feeds.py 2026             # every game's live feed (~40 min, resumable)
+    python src/fetch_season_schedule.py 2026   # games + umpire crews 
+    python src/fetch_feeds.py 2026             # every game's live feed 
     python src/build_pitches.py 2026           # pitches table
     python src/build_challenges.py 2026        # challenges + challenges_remaining
     python src/build_crews.py 2026             # crews + umpire workload report
