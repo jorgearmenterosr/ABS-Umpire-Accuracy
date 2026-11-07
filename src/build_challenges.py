@@ -30,10 +30,21 @@ EXTRA_INNING_START = 10
 PROGRESS_EVERY = 200
 
 CHALLENGE_COLUMNS = [
-    "challenge_id", "game_pk", "season", "at_bat_index", "pitch_number",
-    "inning", "half_inning", "record_location", "review_seq",
-    "challenge_team_id", "challenger_id", "challenger_name",
-    "challenger_role", "final_call_code", "original_call_code",
+    "challenge_id",
+    "game_pk",
+    "season",
+    "at_bat_index",
+    "pitch_number",
+    "inning",
+    "half_inning",
+    "record_location",
+    "review_seq",
+    "challenge_team_id",
+    "challenger_id",
+    "challenger_name",
+    "challenger_role",
+    "final_call_code",
+    "original_call_code",
     "is_overturned",
 ]
 
@@ -92,7 +103,8 @@ def challenges_table(feed: dict) -> pd.DataFrame:
                 continue
             where = "pitch" if event.get("reviewDetails") else "play"
             reviews = [review] + [
-                r for r in review.get("additionalReviews", [])
+                r
+                for r in review.get("additionalReviews", [])
                 if r.get("reviewType") == "MJ"
             ]
             for seq, r in enumerate(reviews, start=1):
@@ -119,6 +131,7 @@ def remaining_before_each_pitch(feed: dict) -> pd.DataFrame:
             rows.append(
                 {
                     "game_pk": game["game"]["pk"],
+                    "season": int(game["game"]["season"]),
                     "at_bat_index": play["about"]["atBatIndex"],
                     "pitch_number": event["pitchNumber"],
                     "challenges_left_home": left["home"],
@@ -211,7 +224,9 @@ def main() -> None:
     remaining = pd.concat(remaining_frames, ignore_index=True)
     if len(challenges):
         assert challenges["challenge_id"].is_unique, "duplicate challenge_id"
-        challenges["is_overturned"] = challenges["is_overturned"].astype("boolean")
+        challenges["is_overturned"] = challenges["is_overturned"].astype(
+            "boolean"
+        )
         overturned = int(challenges["is_overturned"].sum())
     else:
         challenges = pd.DataFrame(columns=CHALLENGE_COLUMNS)

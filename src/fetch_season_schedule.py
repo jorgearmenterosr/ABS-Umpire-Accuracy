@@ -217,7 +217,8 @@ def make_table(rows: list[dict], columns: list[str]) -> pd.DataFrame:
     integer_columns = [
         column
         for column in columns
-        if column.endswith("_id") or column in {"season", "game_number"}
+        if column.endswith("_id")
+        or column in {"game_pk", "season", "game_number"}
     ]
     text_columns = [
         column

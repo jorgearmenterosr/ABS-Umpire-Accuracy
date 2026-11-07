@@ -39,6 +39,10 @@ Before saving, each table must check that its key is unique.
   to their source.
 - Use integer types for IDs, nullable `Int64` when an ID may be missing,
   booleans for true/false values, and strings for text.
+- `game_pk` and every `_id` column are nullable integers (`Int64`) in
+  every table. A table's columns and types must be identical across
+  seasons; rebuild every season with the same script version before
+  combining.
 
 ## Season table files
 

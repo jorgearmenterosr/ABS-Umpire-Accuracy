@@ -214,6 +214,7 @@ def feeds_for(season: int) -> list[Path]:
 
 # ---------------------------------------------------------------- main
 
+
 def main() -> None:
     season = int(sys.argv[1]) if len(sys.argv) > 1 else 2026
     paths = feeds_for(season)
