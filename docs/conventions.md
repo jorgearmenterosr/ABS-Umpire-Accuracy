@@ -115,3 +115,6 @@ assignment table files for those seasons and the Retrosheet biofile.
 Retrosheet matches use exact normalized names from `fullname` or
 `usename` plus `lastname`. Names without a unique match remain unmatched and
 are listed in `reports/umpire_match_issues.csv`; they are not guessed.
+
+## Grading
+For 2026, plate_x_ft and plate_z_ft in pitches_graded use Baseball Savant’s midpoint-of-plate coordinates, joined by game_pk, at_bat_number = at_bat_index + 1, and pitch_number. The source pitches table is unchanged. If Savant coordinates are missing, do not fall back to live-feed coordinates; leave the pitch ungraded.
