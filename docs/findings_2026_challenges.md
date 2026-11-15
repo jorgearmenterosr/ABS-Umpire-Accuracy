@@ -1,4 +1,4 @@
-# Findings: 2026 challenge behaviour (notebooks 20 and 21)
+# Findings: 2026 challenge behaviour (notebooks 20, 21, 22)
 
 15 Nov 2026. Source: `challenges_enriched`, `challenges_remaining`,
 `games` (2026 regular season, 10,557 challenges in 2,429 games). Every
@@ -41,12 +41,35 @@ judgment, not umpire error. 95% Wilson intervals throughout.
 
 6. **No home advantage.** Home 53.3% (5,253), away 54.4% (5,304).
 
+7. **Players challenge worst on the calls that hurt their own side**
+   (notebook 22). Batters: 64% at 1-0/2-0, 40% with two strikes.
+   Catchers: 63-69% at 0-0/0-1, 45-48% at 3-0/3-1/3-2. Each role's
+   worst counts are the ones where the call goes against it. 3-2 is
+   the busiest and worst count for both (495 / 471 challenges; 38% /
+   45%).
+
+8. **Catchers burn the spare challenge too.** 9th inning+ with 2 left:
+   catchers 36% (n 389), batters 37% (n 336). With 1 left: catchers
+   51%, batters 41%. Early game: catchers 61% regardless. The catcher
+   advantage holds only when a challenge is scarce.
+
+9. **Pitch type.** Curveballs 60% (786), changeups 57%, sliders /
+   cutters / sinkers 54-55%, four-seamers 53% (3,569, a third of all),
+   sweepers 49% (815). By volume: FF 34%, SI 21%, SL 12%.
+
+10. **The 2026 called zone sits above the ABS zone** (first
+    umpire-behaviour finding, from challenge outcomes alone). Called
+    balls in the low third overturned 79%; called strikes there 22%.
+    Called strikes above the zone overturned 64%; called balls above
+    49%. Umpires miss low strikes and give high ones. Challenged
+    pitches only; Jorge's J3 contour will put inches on it.
+
 ## What to think about
 
-- Findings 1–3 are probably one mechanism seen three ways: batters
-  challenge the pitch that just went against them, catchers challenge
-  the pitch they saw. Test: role × count split (batters should drive
-  the full-count collapse).
+- Findings 1-3 and 7-8 are one mechanism: incentives. Players
+  challenge worst when the call hurts them most, and everyone burns a
+  spare challenge in the 9th. The catcher advantage is conditional on
+  scarcity, not innate.
 - Finding 4 reframes the allowance question: before asking whether
   three challenges would help, ask why two are not used before the 9th.
 - None of this says anything about umpire accuracy yet. Jorge's
@@ -61,10 +84,12 @@ judgment, not umpire error. 95% Wilson intervals throughout.
 `reports/tables/`: player_challengers_2026_all.csv,
 player_challengers_2026_ranked.csv, team_challengers_2026.csv,
 challenges_by_inning_2026.csv, challenges_by_count_2026.csv,
-unused_challenges_2026.csv. Notebooks: 20_player_challengers.ipynb,
-21_team_challengers.ipynb.
+unused_challenges_2026.csv, challenges_role_by_count_2026.csv,
+challenges_role_by_late_inventory_2026.csv,
+challenges_by_pitch_type_2026.csv,
+challenges_by_call_and_location_2026.csv. Notebooks: 20, 21, 22.
 
 ## Next (Owen)
 
-Role × count cell in notebook 21; O1 accuracy by season and O2 umpire
+O1 accuracy by season and O2 umpire
 rankings once `pitches_graded` exists; O5 umpire × challenge rates.
