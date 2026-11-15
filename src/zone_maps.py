@@ -3,11 +3,11 @@
 import math
 from pathlib import Path
 
+import matplotlib.colors
 import matplotlib.pyplot as plt
+import matplotlib.ticker
 import numpy as np
 import pandas as pd
-from matplotlib.colors import LogNorm
-from matplotlib.ticker import PercentFormatter
 
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 INPUT_PATH = (
@@ -197,16 +197,28 @@ def plot_grid_map(grid, season, metric, title, output_name):
     figure, axis = plt.subplots(figsize=(12, 9))
 
     if metric == "called_pitches":
-        maximum = max(float(season_grid[metric].max()), MIN_CELL_PITCHES + 1)
+        maximum = max(
+            float(
+                grid.loc[
+                    grid["called_pitches"].ge(MIN_CELL_PITCHES),
+                    "called_pitches",
+                ].max()
+            ),
+            MIN_CELL_PITCHES + 1,
+        )
         mesh = axis.pcolormesh(
             x_edges,
             z_edges,
             np.ma.masked_invalid(matrix.to_numpy(dtype=float)),
             shading="flat",
             cmap="viridis",
-            norm=LogNorm(vmin=MIN_CELL_PITCHES, vmax=maximum),
+            norm=matplotlib.colors.LogNorm(
+                vmin=MIN_CELL_PITCHES,
+                vmax=maximum,
+            ),
         )
-        colorbar_label = "Called pitches per cell (log scale)"
+        colorbar = figure.colorbar(mesh, ax=axis)
+        colorbar.set_label("Called pitches per cell (log scale)")
     else:
         mesh = axis.pcolormesh(
             x_edges,
@@ -217,14 +229,11 @@ def plot_grid_map(grid, season, metric, title, output_name):
             vmin=0,
             vmax=1,
         )
-        colorbar_label = "Rate"
         colorbar = figure.colorbar(mesh, ax=axis)
-        colorbar.set_label(colorbar_label)
-        colorbar.ax.yaxis.set_major_formatter(PercentFormatter(1))
-
-    if metric == "called_pitches":
-        colorbar = figure.colorbar(mesh, ax=axis)
-        colorbar.set_label(colorbar_label)
+        colorbar.set_label("Rate")
+        colorbar.ax.yaxis.set_major_formatter(
+            matplotlib.ticker.PercentFormatter(1)
+        )
 
     for row in season_grid.itertuples(index=False):
         if metric == "called_pitches":
