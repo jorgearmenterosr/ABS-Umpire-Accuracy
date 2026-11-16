@@ -17,7 +17,7 @@ PROJECT_DIR = Path(__file__).resolve().parent.parent
 RAW_DIR = PROJECT_DIR / "data" / "raw" / "feed_live"
 TABLES_DIR = PROJECT_DIR / "data" / "tables"
 
-CALLED_CODES = ("B", "C")  # B = ball, C = called strike
+CALLED_CODES = ("B", "*B", "C")  # B = ball, C = called strike, *B = ball in the dirt
 ABS_REVIEW_TYPE = "MJ"
 PITCH_KEY = ["game_pk", "at_bat_index", "pitch_number"]
 NULLABLE_INT_COLUMNS = [
@@ -73,6 +73,8 @@ def original_call(final_code: str, review: dict | None) -> str | None:
     """
     if final_code not in CALLED_CODES:
         return None
+    if final_code == "*B":
+        final_code = "B"  # a ball in the dirt is a called ball
     if review is None:
         return final_code
     overturned = review.get("isOverturned")

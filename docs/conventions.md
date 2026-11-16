@@ -118,3 +118,10 @@ are listed in `reports/umpire_match_issues.csv`; they are not guessed.
 
 ## Grading
 For 2026, plate_x_ft and plate_z_ft in pitches_graded use Baseball Savant’s midpoint-of-plate coordinates, joined by game_pk, at_bat_number = at_bat_index + 1, and pitch_number. The source pitches table is unchanged. If Savant coordinates are missing, do not fall back to live-feed coordinates; leave the pitch ungraded.
+
+
+## Pitches
+
+Called pitches are codes B, *B and C. *B (ball in the dirt) is a called ball; `original_call_code` stores it as B, `call_code_raw` keeps *B. About 4% of
+called pitches are *B. Changed 16 Nov 2026 to match UmpScorecards' pitch counts.
+
