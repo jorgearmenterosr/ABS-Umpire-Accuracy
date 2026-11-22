@@ -83,14 +83,8 @@ TIER_COLUMNS = [
 ]
 
 
-def load_game_table() -> pd.DataFrame:
-    """Return one row per umpire per game: called pitches and correct."""
-    pitches = pd.read_parquet(
-        TABLES_DIR / "pitches_graded" / "all_seasons.parquet",
-        columns=["season", "game_pk", "is_call_correct"],
-    )
-    pitches = pitches[pitches["is_call_correct"].notna()]
-
+def load_plate_umpires() -> pd.DataFrame:
+    """Return the plate umpire of every game: game, umpire id and name."""
     games = pd.read_parquet(
         TABLES_DIR / "games" / "all_seasons.parquet",
         columns=["game_pk", "plate_umpire_id", "plate_umpire_name"],
@@ -102,26 +96,35 @@ def load_game_table() -> pd.DataFrame:
             "plate_umpire_name": "official_name",
         }
     )
+    # One spelling of each name, so an umpire is never split in two.
+    names = games.drop_duplicates("official_id", keep="last").set_index(
+        "official_id"
+    )["official_name"]
+    games["official_name"] = games["official_id"].map(names)
+    return games
+
+
+def load_game_table() -> pd.DataFrame:
+    """Return one row per umpire per game: called pitches and correct."""
+    pitches = pd.read_parquet(
+        TABLES_DIR / "pitches_graded" / "all_seasons.parquet",
+        columns=["season", "game_pk", "is_call_correct"],
+    )
+    pitches = pitches[pitches["is_call_correct"].notna()]
 
     graded = len(pitches)
-    pitches = pitches.merge(games, on="game_pk", how="inner")
+    pitches = pitches.merge(load_plate_umpires(), on="game_pk", how="inner")
     if len(pitches) < graded:
         dropped = graded - len(pitches)
         print(f"note: {dropped:,} graded pitches have no plate umpire")
 
-    by_game = (
-        pitches.groupby(["season", "official_id", "game_pk"])[
+    return (
+        pitches.groupby(["season", "official_id", "official_name", "game_pk"])[
             "is_call_correct"
         ]
         .agg(called="size", correct="sum")
         .reset_index()
     )
-    # One spelling of each name, so an umpire is never split in two.
-    names = games.drop_duplicates("official_id", keep="last").set_index(
-        "official_id"
-    )["official_name"]
-    by_game.insert(2, "official_name", by_game["official_id"].map(names))
-    return by_game
 
 
 def season_table(by_game: pd.DataFrame) -> pd.DataFrame:
