@@ -1071,9 +1071,13 @@ def plot_borderline_by_count(league: pd.DataFrame) -> Figure:
     return fig
 
 
-def build() -> dict[str, pd.DataFrame]:
-    """Build every table, keyed by the name of the CSV it is saved as."""
-    tiers = umpire_tiers.build()["umpire_tiers"]
+def build(tiers: pd.DataFrame | None = None) -> dict[str, pd.DataFrame]:
+    """Build every table, keyed by the name of the CSV it is saved as.
+
+    Pass the tier table if it is already built, to save building it twice.
+    """
+    if tiers is None:
+        tiers = umpire_tiers.build()["umpire_tiers"]
     calls = load_calls()
     ump = add_error_rates(season_totals(calls, tiers))
     ump = add_lean(ump, totals(calls, [*UMPIRE_SEASON, "game_pk"]))
