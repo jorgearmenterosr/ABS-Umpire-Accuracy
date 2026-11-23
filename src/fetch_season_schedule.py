@@ -7,6 +7,7 @@ from datetime import date, timedelta
 from pathlib import Path
 
 import pandas as pd
+import requests
 from requests.exceptions import RequestException
 
 from fetch_schedule import fetch_schedule, save_raw, save_table
@@ -15,6 +16,8 @@ PROJECT_DIR = Path(__file__).resolve().parent.parent
 RAW_DIR = PROJECT_DIR / "data" / "raw" / "schedule"
 REQUEST_PAUSE_SECONDS = 0.5
 NO_UMPIRE_NAME = "NO UMPIRE"
+SCHEDULE_URL = "https://statsapi.mlb.com/api/v1/schedule"
+HISTORICAL_SEASONS = range(2000, 2021)
 
 # Season dates are based on MLB's regular-season schedule announcements.
 # 2021: https://www.mlb.com/press-release/press-release-mlb-announces-2021-regular-season-schedule
@@ -169,7 +172,7 @@ def resolve_repeated_games(
         rows_by_game.setdefault(row["game_pk"], []).append(row)
 
     kept_games = []
-    kept_sources = {}
+    kept_occurrences = {}
     repeated_count = 0
 
     for game_pk, rows in rows_by_game.items():
@@ -190,9 +193,12 @@ def resolve_repeated_games(
             selected = matches[0]
 
         selected = dict(selected)
+        kept_occurrences[game_pk] = (
+            selected["source_file"],
+            selected["_schedule_date"],
+        )
         selected.pop("_schedule_date")
         kept_games.append(selected)
-        kept_sources[game_pk] = selected["source_file"]
 
     status_counts = {}
     for row in game_rows:
@@ -202,7 +208,8 @@ def resolve_repeated_games(
 
     kept_assignments = []
     for row in assignment_rows:
-        if kept_sources.get(row["game_pk"]) == row["source_file"]:
+        occurrence = (row["source_file"], row["_schedule_date"])
+        if kept_occurrences.get(row["game_pk"]) == occurrence:
             assignment = dict(row)
             assignment.pop("_schedule_date")
             kept_assignments.append(assignment)
@@ -278,37 +285,87 @@ def summarize(
         )
 
 
+def fetch_historical_season(season: int) -> tuple[dict, str, bool]:
+    """Fetch a historical season in one Stats API request and cache it."""
+    raw_path = RAW_DIR / f"season_{season}.json"
+    if raw_path.exists():
+        with raw_path.open(encoding="utf-8") as raw_file:
+            payload = json.load(raw_file)
+        return payload, raw_path.relative_to(PROJECT_DIR).as_posix(), False
+
+    response = requests.get(
+        SCHEDULE_URL,
+        params={
+            "sportId": 1,
+            "season": season,
+            "gameType": "R",
+            "hydrate": "officials",
+        },
+        timeout=60,
+    )
+    response.raise_for_status()
+    payload = response.json()
+    RAW_DIR.mkdir(parents=True, exist_ok=True)
+    with raw_path.open("w", encoding="utf-8") as raw_file:
+        json.dump(payload, raw_file, ensure_ascii=False)
+    return payload, raw_path.relative_to(PROJECT_DIR).as_posix(), True
+
+
+def save_archive_table(table: pd.DataFrame, name: str, season: int) -> Path:
+    """Save archive data without overwriting current-season tables."""
+    output_dir = PROJECT_DIR / "data" / "tables" / name / f"season={season}"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    parquet_path = output_dir / "part.parquet"
+    table.to_parquet(parquet_path, index=False)
+    table.to_csv(output_dir / "part.csv", index=False)
+    return parquet_path
+
+
 def main() -> None:
     """Fetch, validate, and save schedule tables for one season."""
     if len(sys.argv) != 2:
         raise SystemExit("Usage: python src/fetch_season_schedule.py <season>")
 
     season = int(sys.argv[1])
-    if season not in SEASON_DATES:
-        choices = ", ".join(str(year) for year in SEASON_DATES)
-        raise SystemExit(f"Season must be one of: {choices}")
-
     game_rows = []
     assignment_rows = []
     failed_dates = []
     fetched_dates = 0
 
-    for date_text in season_dates(season):
+    if season in HISTORICAL_SEASONS:
         try:
-            payload, source_file, was_fetched = load_or_fetch_date(date_text)
+            payload, source_file, was_fetched = fetch_historical_season(season)
         except RequestException as error:
-            failed_dates.append(f"{date_text}: {error}")
-            continue
-
-        fetched_dates += int(was_fetched)
+            raise SystemExit(
+                f"Could not fetch season {season}: {error}"
+            ) from error
+        fetched_dates = int(was_fetched)
         games_for_date, assignments_for_date = extract_rows(
             payload, source_file
         )
         game_rows.extend(games_for_date)
         assignment_rows.extend(assignments_for_date)
+    elif season in SEASON_DATES:
+        for date_text in season_dates(season):
+            try:
+                payload, source_file, was_fetched = load_or_fetch_date(date_text)
+            except RequestException as error:
+                failed_dates.append(f"{date_text}: {error}")
+                continue
 
-        if was_fetched:
-            time.sleep(REQUEST_PAUSE_SECONDS)
+            fetched_dates += int(was_fetched)
+            games_for_date, assignments_for_date = extract_rows(
+                payload, source_file
+            )
+            game_rows.extend(games_for_date)
+            assignment_rows.extend(assignments_for_date)
+
+            if was_fetched:
+                time.sleep(REQUEST_PAUSE_SECONDS)
+    else:
+        supported = f"{min(HISTORICAL_SEASONS)}–{max(HISTORICAL_SEASONS)} or "
+        supported += f"{min(SEASON_DATES)}–{max(SEASON_DATES)}"
+        raise SystemExit(f"Season must be in the range {supported}")
 
     (
         game_rows,
@@ -329,11 +386,22 @@ def main() -> None:
         "Unexpected season in umpire assignments"
     )
 
-    print("Saved games:", save_table(games, "games", season))
-    print(
-        "Saved umpire assignments:",
-        save_table(assignments, "umpire_assignments", season),
-    )
+    if season in HISTORICAL_SEASONS:
+        print(
+            "Saved games archive:",
+            save_archive_table(games, "games_archive", season),
+        )
+        print(
+            "Saved umpire assignments archive:",
+            save_archive_table(assignments, "umpire_assignments_archive", season),
+        )
+    else:
+        print("Saved games:", save_table(games, "games", season))
+        print(
+            "Saved umpire assignments:",
+            save_table(assignments, "umpire_assignments", season),
+        )
+
     summarize(
         games,
         assignments,
